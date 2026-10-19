@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Download, ImagePlus, Layers, Share2, Trash2, Wand2, Loader2 } from 'lucide-react'
+import { Download, Eye, EyeOff, ImagePlus, Layers, Share2, Trash2, Wand2, Loader2 } from 'lucide-react'
 import { CropCard } from './CropCard'
 import { Preview } from './Preview'
 import { detectOverlaps } from './detect'
@@ -18,6 +18,7 @@ export default function App() {
   const [format, setFormat] = useState<Format>('image/png')
   // 默认 1，每次点下载后自动加 1；重新上传一批图片时回到 1
   const [fileName, setFileName] = useState('1')
+  const [removeAfterExport, setRemoveAfterExport] = useState(initialRemoveAfterExport)
   const [busy, setBusy] = useState<string | null>(null)
   const [highlight, setHighlight] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -51,6 +52,14 @@ export default function App() {
       // 隐私模式等情况下无法保存，忽略
     }
   }, [cardHeight])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(REMOVE_AFTER_EXPORT_KEY, removeAfterExport ? '1' : '0')
+    } catch {
+      // 忽略
+    }
+  }, [removeAfterExport])
 
   // 支持 Ctrl+V 粘贴截图
   useEffect(() => {
@@ -94,6 +103,9 @@ export default function App() {
 
   const onUncommit = (id: string) => update(id, { committed: null })
 
+  // 预览区接缝手柄：同时更新裁剪线和已加入的范围，原图区卡片保持一致
+  const onAdjustSegment = (id: string, top: number, bottom: number) => update(id, { top, bottom, committed: { top, bottom } })
+
   // 原图区左右移动：在全部图片中移动
   const onMoveShot = (id: string, delta: number) =>
     setShots(prev => {
@@ -132,16 +144,22 @@ export default function App() {
     setShots([])
   }
 
-  const onAuto = async () => {
-    if (shots.length < 2) {
+  // 自动拼接指定的图片；不在其中的图片撤出预览区，保证预览区只有这一组
+  const autoSplice = async (targets: Shot[]) => {
+    if (targets.length < 2) {
       setError('至少需要两张图片才能自动拼接')
       return
     }
     setBusy('正在检测重叠…')
     try {
-      const { crops, notes } = await detectOverlaps(shots)
+      const { crops, notes } = await detectOverlaps(targets)
+      const index = new Map(targets.map((s, i) => [s.id, i]))
       setShots(prev =>
-        prev.map((s, i) => ({ ...s, ...crops[i], committed: { ...crops[i] }, note: notes[i] })),
+        prev.map(s => {
+          const i = index.get(s.id)
+          if (i === undefined) return s.committed ? { ...s, committed: null } : s
+          return { ...s, ...crops[i], committed: { ...crops[i] }, note: notes[i] }
+        }),
       )
     } catch (e) {
       setError(`自动检测失败：${(e as Error).message}`)
@@ -149,6 +167,10 @@ export default function App() {
       setBusy(null)
     }
   }
+
+  const onAuto = () => autoSplice(shots)
+
+  const onAutoTo = (id: string) => autoSplice(shots.slice(0, shots.findIndex(s => s.id === id) + 1))
 
   const makeBlob = async () => {
     setBusy('正在合并…')
@@ -170,6 +192,11 @@ export default function App() {
     downloadBlob(blob, exportFileName(ext, fileName))
     const base = cleanBaseName(fileName)
     if (base) setFileName(nextBaseName(base))
+    if (removeAfterExport) {
+      const used = new Set(segments.map(s => s.id))
+      segments.forEach(s => URL.revokeObjectURL(s.url))
+      setShots(prev => prev.filter(s => !used.has(s.id)))
+    }
   }
 
   const canShare = typeof navigator.canShare === 'function'
@@ -271,6 +298,7 @@ export default function App() {
                 onCommit={onCommit}
                 onRemove={onRemoveShot}
                 onMove={onMoveShot}
+                onAutoTo={onAutoTo}
               />
             ))}
             <button className="add-card" onClick={() => fileInput.current?.click()} aria-label="继续添加">
@@ -297,7 +325,8 @@ export default function App() {
         </div>
 
         <div className="preview-layout">
-          <div className="preview-wrap" style={{ maxWidth: previewWidth }}>
+          {/* 左右留出接缝手柄和浮动按钮的空间，见 .preview-wrap */}
+          <div className="preview-wrap" style={{ ['--preview-max' as string]: `${previewWidth}px` }}>
             {segments.length === 0 ? (
               <div className="preview-empty muted">在上方截图下点“确定”，或点“自动拼接”</div>
             ) : (
@@ -308,7 +337,20 @@ export default function App() {
                 onMove={onMoveSegment}
                 onRemove={onUncommit}
                 onLocate={onLocate}
+                onAdjust={onAdjustSegment}
               />
+            )}
+            {segments.length > 1 && (
+              <div className="seam-toggle-rail">
+                <button
+                  className="seam-toggle"
+                  onClick={() => setShowSeams(v => !v)}
+                  aria-pressed={showSeams}
+                  title={showSeams ? '隐藏接缝和手柄，查看合并效果' : '显示接缝和手柄'}
+                >
+                  {showSeams ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             )}
           </div>
 
@@ -345,6 +387,10 @@ export default function App() {
             <button className="btn btn-primary btn-block" onClick={onExport} disabled={segments.length === 0 || !!busy}>
               {busy ? <Loader2 size={16} className="spin" /> : <Download size={16} />} {busy ?? '合并导出'}
             </button>
+            <label className="check">
+              <input type="checkbox" checked={removeAfterExport} onChange={e => setRemoveAfterExport(e.target.checked)} />
+              导出后移除已用图片
+            </label>
             {canShare && (
               <button className="btn btn-block" onClick={onShare} disabled={segments.length === 0 || !!busy}>
                 <Share2 size={16} /> 分享 / 存到相册
@@ -359,6 +405,15 @@ export default function App() {
 }
 
 const CARD_HEIGHT_KEY = 'image-splicing:card-height'
+const REMOVE_AFTER_EXPORT_KEY = 'image-splicing:remove-after-export'
+
+function initialRemoveAfterExport() {
+  try {
+    return localStorage.getItem(REMOVE_AFTER_EXPORT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 // 默认让原图高度接近一屏，看得清细节；用户调整过则沿用上次的值
 function initialCardHeight() {

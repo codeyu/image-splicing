@@ -483,12 +483,25 @@ select {
 }
 
 .preview-wrap {
+  position: relative;
   width: 100%;
+  /* 左右各留 88px：36px 给接缝手柄，其余给浮动按钮 */
+  max-width: min(var(--preview-max, 360px), calc(100% - 176px));
   margin: 0 auto;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  overflow: hidden;
   background: var(--surface);
+}
+
+/* 接缝手柄要伸出预览框，圆角改由首尾片段自己裁 */
+.preview-stack > .segment:first-child .seg-clip {
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+}
+
+.preview-stack > .segment:last-child .seg-clip {
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
 }
 
 .preview-empty {
@@ -504,6 +517,11 @@ select {
 .segment {
   position: relative;
   width: 100%;
+}
+
+.seg-clip {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: var(--surface);
 }
@@ -523,27 +541,86 @@ select {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
-/* 接缝辅助线：仅预览时显示，不参与导出 */
-.seam {
+/* 预览框右侧的浮动按钮：随滚动停在视口中部，切换接缝和手柄的显示 */
+.seam-toggle-rail {
   position: absolute;
-  left: 0;
-  right: 0;
+  top: 0;
   bottom: 0;
-  border-bottom: 1px dashed var(--danger);
+  right: -88px;
+  width: 40px;
   pointer-events: none;
-  z-index: 2;
 }
 
-.seam span {
+.seam-toggle {
+  position: sticky;
+  top: 50vh;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.seam-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* 接缝虚线伸出预览框，两端各有上下两个手柄：上面调上图，下面调下图 */
+.seam-handles {
   position: absolute;
-  left: 6px;
-  bottom: -9px;
-  padding: 0 4px;
+  left: -36px;
+  right: -36px;
+  bottom: 0;
+  height: 0;
+  border-bottom: 1px dashed var(--danger);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.seam-handle {
+  position: absolute;
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--danger);
   font-size: 11px;
-  line-height: 16px;
-  color: #fff;
+  font-weight: 600;
+  line-height: 20px;
+  cursor: ns-resize;
+  touch-action: none;
+  pointer-events: auto;
+}
+
+.seam-handle:hover,
+.seam-handle:active {
   background: var(--danger);
-  border-radius: 4px;
+  color: #fff;
+}
+
+.seam-handle-left {
+  left: 0;
+}
+
+.seam-handle-right {
+  right: 0;
+}
+
+.seam-handle-upper {
+  bottom: 3px;
+}
+
+.seam-handle-lower {
+  top: 3px;
 }
 
 .seg-ops {
@@ -641,6 +718,11 @@ select {
   padding-right: 8px;
 }
 
+.card-foot-actions {
+  display: flex;
+  gap: 6px;
+}
+
 .warn {
   font-size: 12px;
   color: var(--warn);
@@ -698,6 +780,15 @@ select {
   .panel .hint,
   .panel .stat:first-child {
     display: none;
+  }
+
+  /* 窄屏没有右侧空白，浮动按钮收进预览框右缘 */
+  .preview-wrap {
+    max-width: min(var(--preview-max, 360px), calc(100% - 72px));
+  }
+
+  .seam-toggle-rail {
+    right: 6px;
   }
 
 }

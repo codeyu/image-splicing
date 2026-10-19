@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { ArrowLeft, ArrowRight, Check, RefreshCw, RotateCcw, X, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, RefreshCw, RotateCcw, Wand2, X, AlertTriangle } from 'lucide-react'
 import { MIN_CROP, type Shot } from './types'
 
 type DragMode = 'top' | 'bottom' | 'move'
@@ -20,9 +20,11 @@ interface Props {
   onCommit: (id: string) => void
   onRemove: (id: string) => void
   onMove: (id: string, delta: number) => void
+  /** 自动拼接第一张到这张 */
+  onAutoTo: (id: string) => void
 }
 
-export function CropCard({ shot, index, total, highlighted, viewHeight, onResize, onCrop, onCommit, onRemove, onMove }: Props) {
+export function CropCard({ shot, index, total, highlighted, viewHeight, onResize, onCrop, onCommit, onRemove, onMove, onAutoTo }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{ mode: DragMode; startY: number; top: number; bottom: number } | null>(null)
   const resize = useRef<{ mode: ResizeMode; startX: number; startY: number; startH: number } | null>(null)
@@ -166,16 +168,23 @@ export function CropCard({ shot, index, total, highlighted, viewHeight, onResize
           {committed && !dirty && ' · 已加入'}
           {dirty && ' · 有修改'}
         </span>
-        {committed === null && (
-          <button className="btn btn-primary btn-sm" onClick={() => onCommit(shot.id)}>
-            <Check size={14} /> 确定
-          </button>
-        )}
-        {dirty && (
-          <button className="btn btn-primary btn-sm" onClick={() => onCommit(shot.id)}>
-            <RefreshCw size={14} /> 更新
-          </button>
-        )}
+        <span className="card-foot-actions">
+          {index > 0 && (
+            <button className="btn btn-sm" title="自动拼接第 1 张到这张" onClick={() => onAutoTo(shot.id)}>
+              <Wand2 size={14} /> 拼接到此
+            </button>
+          )}
+          {committed === null && (
+            <button className="btn btn-primary btn-sm" onClick={() => onCommit(shot.id)}>
+              <Check size={14} /> 确定
+            </button>
+          )}
+          {dirty && (
+            <button className="btn btn-primary btn-sm" onClick={() => onCommit(shot.id)}>
+              <RefreshCw size={14} /> 更新
+            </button>
+          )}
+        </span>
       </div>
 
       <div className="resize resize-e" {...resizeProps('e')} />
