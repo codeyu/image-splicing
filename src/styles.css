@@ -613,6 +613,34 @@ select {
   background: var(--surface);
 }
 
+.filename {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.filename:focus-within {
+  border-color: var(--accent);
+}
+
+.filename input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 8px;
+  border: 0;
+  outline: none;
+  background: transparent;
+}
+
+.filename span {
+  padding-right: 8px;
+}
+
 .warn {
   font-size: 12px;
   color: var(--warn);

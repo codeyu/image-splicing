@@ -49,10 +49,20 @@ export async function renderMerged(segments: Shot[], type: 'image/png' | 'image/
   })
 }
 
-export function exportFileName(ext: string) {
+export function defaultBaseName() {
   const d = new Date()
   const p = (n: number) => String(n).padStart(2, '0')
-  return `splice-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.${ext}`
+  return `splice-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
+}
+
+// 用户自填的文件名：去掉系统不允许的字符和多余的扩展名，留空则用时间戳
+export function exportFileName(ext: string, baseName = '') {
+  const clean = baseName
+    .replace(/[\\/:*?"<>|\x00-\x1f]/g, '')
+    .replace(/\.(png|jpe?g)$/i, '')
+    .trim()
+    .replace(/^\.+|\.+$/g, '')
+  return `${clean || defaultBaseName()}.${ext}`
 }
 
 export function downloadBlob(blob: Blob, name: string) {

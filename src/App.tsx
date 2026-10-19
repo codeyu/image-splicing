@@ -16,6 +16,7 @@ export default function App() {
   const [previewWidth, setPreviewWidth] = useState(360)
   const [showSeams, setShowSeams] = useState(true)
   const [format, setFormat] = useState<Format>('image/png')
+  const [fileName, setFileName] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [highlight, setHighlight] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -163,14 +164,14 @@ export default function App() {
 
   const onExport = async () => {
     const blob = await makeBlob()
-    if (blob) downloadBlob(blob, exportFileName(ext))
+    if (blob) downloadBlob(blob, exportFileName(ext, fileName))
   }
 
   const canShare = typeof navigator.canShare === 'function'
   const onShare = async () => {
     const blob = await makeBlob()
     if (!blob) return
-    const file = new File([blob], exportFileName(ext), { type: format })
+    const file = new File([blob], exportFileName(ext, fileName), { type: format })
     if (!navigator.canShare({ files: [file] })) {
       downloadBlob(blob, file.name)
       return
@@ -322,6 +323,19 @@ export default function App() {
                 <option value="image/png">PNG（无损）</option>
                 <option value="image/jpeg">JPG（体积小）</option>
               </select>
+            </label>
+            <label className="stat">
+              <span className="muted">文件名</span>
+              <div className="filename">
+                <input
+                  type="text"
+                  value={fileName}
+                  placeholder="留空则按时间命名"
+                  onChange={e => setFileName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && segments.length > 0 && !busy && onExport()}
+                />
+                <span className="muted">.{ext}</span>
+              </div>
             </label>
             <button className="btn btn-primary btn-block" onClick={onExport} disabled={segments.length === 0 || !!busy}>
               {busy ? <Loader2 size={16} className="spin" /> : <Download size={16} />} {busy ?? '合并导出'}
