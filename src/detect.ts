@@ -51,7 +51,7 @@ export async function detectOverlaps(shots: Shot[]): Promise<DetectResult> {
     const a = shots[i]
     const b = shots[i + 1]
     if (a.width !== b.width) {
-      notes[i + 1] = '与上一张宽度不同，未自动检测'
+      notes[i + 1] = '前の画像と幅が異なるため、自動検出をスキップしました'
       continue
     }
     const m = bestOffset(coarse[i], coarse[i + 1], fine[i], fine[i + 1])
@@ -60,19 +60,19 @@ export async function detectOverlaps(shots: Shot[]): Promise<DetectResult> {
       const { header, footer } = commonEdges(fine[i], fine[i + 1])
       crops[i].bottom = Math.min(crops[i].bottom, a.height - footer)
       crops[i + 1].top = header
-      notes[i + 1] = '未检测到与上一张的重叠，请手动确认'
+      notes[i + 1] = '前の画像との重なりを検出できませんでした。手動で確認してください'
       continue
     }
     const { run, ambiguous } = m
     crops[i].bottom = Math.min(crops[i].bottom, run.end + run.d)
     crops[i + 1].top = run.end
-    if (ambiguous) notes[i + 1] = '有多处相似内容，接缝位置请人工确认'
+    if (ambiguous) notes[i + 1] = '似た内容が複数あるため、つなぎ目の位置を確認してください'
   }
 
   for (let i = 0; i < n; i++) {
     if (crops[i].bottom - crops[i].top < 8) {
       crops[i] = { top: 0, bottom: shots[i].height }
-      notes[i] = '检测结果异常（可能与相邻图完全重复），已恢复整张'
+      notes[i] = '検出結果が不正なため（隣の画像と完全に重複している可能性があります）、画像全体に戻しました'
     }
   }
   return { crops, notes }

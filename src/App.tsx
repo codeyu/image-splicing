@@ -36,7 +36,7 @@ export default function App() {
     setFileName('1')
     const loaded = await Promise.all(list.map(loadShot))
     setShots(prev => [...prev, ...loaded.filter((s): s is Shot => s !== null)])
-    if (loaded.some(s => s === null)) setError('有图片无法读取，已跳过')
+    if (loaded.some(s => s === null)) setError('読み込めない画像があったため、スキップしました')
   }, [])
 
   useEffect(() => {
@@ -139,7 +139,7 @@ export default function App() {
   }
 
   const onClear = () => {
-    if (!confirm('清空全部图片？')) return
+    if (!confirm('すべての画像をクリアしますか？')) return
     shots.forEach(s => URL.revokeObjectURL(s.url))
     setShots([])
   }
@@ -147,10 +147,10 @@ export default function App() {
   // 自动拼接指定的图片；不在其中的图片撤出预览区，保证预览区只有这一组
   const autoSplice = async (targets: Shot[]) => {
     if (targets.length < 2) {
-      setError('至少需要两张图片才能自动拼接')
+      setError('自動結合には 2 枚以上の画像が必要です')
       return
     }
-    setBusy('正在检测重叠…')
+    setBusy('重なりを検出中…')
     try {
       const { crops, notes } = await detectOverlaps(targets)
       const index = new Map(targets.map((s, i) => [s.id, i]))
@@ -162,7 +162,7 @@ export default function App() {
         }),
       )
     } catch (e) {
-      setError(`自动检测失败：${(e as Error).message}`)
+      setError(`自動検出に失敗しました：${(e as Error).message}`)
     } finally {
       setBusy(null)
     }
@@ -173,7 +173,7 @@ export default function App() {
   const onAutoTo = (id: string) => autoSplice(shots.slice(0, shots.findIndex(s => s.id === id) + 1))
 
   const makeBlob = async () => {
-    setBusy('正在合并…')
+    setBusy('結合中…')
     try {
       return await renderMerged(segments, format)
     } catch (e) {
@@ -233,17 +233,17 @@ export default function App() {
     >
       <header className="topbar">
         <div className="brand">
-          <Layers size={20} /> 截图拼接
+          <Layers size={20} /> スクショ結合
         </div>
         <div className="toolbar">
           <button className="btn" onClick={() => fileInput.current?.click()}>
-            <ImagePlus size={16} /> 上传图片
+            <ImagePlus size={16} /> 画像を追加
           </button>
           <button className="btn" onClick={onAuto} disabled={!!busy}>
-            <Wand2 size={16} /> 自动拼接
+            <Wand2 size={16} /> 自動結合
           </button>
           <button className="btn" onClick={onClear} disabled={shots.length === 0}>
-            <Trash2 size={16} /> 清空
+            <Trash2 size={16} /> クリア
           </button>
           <input
             ref={fileInput}
@@ -267,9 +267,9 @@ export default function App() {
 
       <section className="section">
         <div className="section-head">
-          <span className="section-title">① 原图区：拖动蓝色上下边线选取需要的部分，点“确定”加入预览</span>
+          <span className="section-title">① 元画像：青い上下の線をドラッグして使う範囲を選び、「確定」でプレビューに追加します</span>
           <label className="range">
-            原图高度
+            表示の高さ
             <input type="range" min={300} max={2000} step={20} value={cardHeight} onChange={e => {
                 setCardHeight(+e.target.value)
                 setViewHeights({})
@@ -280,8 +280,8 @@ export default function App() {
         {shots.length === 0 ? (
           <button className="empty" onClick={() => fileInput.current?.click()}>
             <ImagePlus size={28} />
-            <span>上传手机截图</span>
-            <span className="muted">点击选择、拖入文件，或 Ctrl+V 粘贴。按文件名排序，可多选</span>
+            <span>スクリーンショットを追加</span>
+            <span className="muted">クリックで選択、ドラッグ＆ドロップ、または Ctrl+V で貼り付け。複数選択でき、ファイル名順に並びます</span>
           </button>
         ) : (
           <div className="strip" style={{ ['--card-h' as string]: `${cardHeight}px` }}>
@@ -301,9 +301,9 @@ export default function App() {
                 onAutoTo={onAutoTo}
               />
             ))}
-            <button className="add-card" onClick={() => fileInput.current?.click()} aria-label="继续添加">
+            <button className="add-card" onClick={() => fileInput.current?.click()} aria-label="画像を追加">
               <ImagePlus size={24} />
-              继续添加
+              追加
             </button>
           </div>
         )}
@@ -311,15 +311,15 @@ export default function App() {
 
       <section className="section">
         <div className="section-head">
-          <span className="section-title">② 预览区：按顺序无缝拼接，鼠标悬停片段可拖动排序、上下移动</span>
+          <span className="section-title">② プレビュー：順番どおりにつなげて表示します。マウスを重ねると並べ替え・上下移動ができます</span>
           <div className="section-tools">
             <label className="range">
-              预览宽度
+              プレビュー幅
               <input type="range" min={240} max={800} step={20} value={previewWidth} onChange={e => setPreviewWidth(+e.target.value)} />
             </label>
             <label className="check">
               <input type="checkbox" checked={showSeams} onChange={e => setShowSeams(e.target.checked)} />
-              显示接缝辅助线
+              つなぎ目を表示
             </label>
           </div>
         </div>
@@ -328,7 +328,7 @@ export default function App() {
           {/* 左右留出接缝手柄和浮动按钮的空间，见 .preview-wrap */}
           <div className="preview-wrap" style={{ ['--preview-max' as string]: `${previewWidth}px` }}>
             {segments.length === 0 ? (
-              <div className="preview-empty muted">在上方截图下点“确定”，或点“自动拼接”</div>
+              <div className="preview-empty muted">上の画像で「確定」を押すか、「自動結合」を押してください</div>
             ) : (
               <Preview
                 segments={segments}
@@ -346,7 +346,7 @@ export default function App() {
                   className="seam-toggle"
                   onClick={() => setShowSeams(v => !v)}
                   aria-pressed={showSeams}
-                  title={showSeams ? '隐藏接缝和手柄，查看合并效果' : '显示接缝和手柄'}
+                  title={showSeams ? 'つなぎ目とハンドルを隠して仕上がりを確認' : 'つなぎ目とハンドルを表示'}
                 >
                   {showSeams ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -356,28 +356,28 @@ export default function App() {
 
           <aside className="panel">
             <div className="stat">
-              <span className="muted">片段</span>
+              <span className="muted">結合枚数</span>
               <strong className="stat-big">{segments.length}</strong>
             </div>
             <div className="stat">
-              <span className="muted">导出尺寸</span>
+              <span className="muted">出力サイズ</span>
               <strong>{segments.length ? `${plan.width} × ${plan.height} px` : '—'}</strong>
-              {plan.scale < 1 && <span className="warn">超出浏览器画布上限，已缩小到 {Math.round(plan.scale * 100)}%</span>}
+              {plan.scale < 1 && <span className="warn">ブラウザの Canvas 上限を超えるため、{Math.round(plan.scale * 100)}% に縮小して保存します</span>}
             </div>
             <label className="stat">
-              <span className="muted">格式</span>
+              <span className="muted">ファイル形式</span>
               <select value={format} onChange={e => setFormat(e.target.value as Format)}>
-                <option value="image/png">PNG（无损）</option>
-                <option value="image/jpeg">JPG（体积小）</option>
+                <option value="image/png">PNG（劣化なし）</option>
+                <option value="image/jpeg">JPG（軽量）</option>
               </select>
             </label>
             <label className="stat">
-              <span className="muted">文件名</span>
+              <span className="muted">ファイル名</span>
               <div className="filename">
                 <input
                   type="text"
                   value={fileName}
-                  placeholder="留空则按时间命名"
+                  placeholder="空欄の場合は日時で命名"
                   onChange={e => setFileName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && segments.length > 0 && !busy && onExport()}
                 />
@@ -385,18 +385,18 @@ export default function App() {
               </div>
             </label>
             <button className="btn btn-primary btn-block" onClick={onExport} disabled={segments.length === 0 || !!busy}>
-              {busy ? <Loader2 size={16} className="spin" /> : <Download size={16} />} {busy ?? '合并导出'}
+              {busy ? <Loader2 size={16} className="spin" /> : <Download size={16} />} {busy ?? '結合して保存'}
             </button>
             <label className="check">
               <input type="checkbox" checked={removeAfterExport} onChange={e => setRemoveAfterExport(e.target.checked)} />
-              导出后移除已用图片
+              保存後、使用した画像を一覧から削除
             </label>
             {canShare && (
               <button className="btn btn-block" onClick={onShare} disabled={segments.length === 0 || !!busy}>
-                <Share2 size={16} /> 分享 / 存到相册
+                <Share2 size={16} /> 共有 / 写真に保存
               </button>
             )}
-            <p className="hint muted">图片仅在本地浏览器处理，不会上传</p>
+            <p className="hint muted">画像はブラウザ内でのみ処理され、アップロードされません</p>
           </aside>
         </div>
       </section>

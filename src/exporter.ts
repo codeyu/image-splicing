@@ -26,7 +26,7 @@ export async function renderMerged(segments: Shot[], type: 'image/png' | 'image/
   canvas.width = plan.width
   canvas.height = plan.height
   const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('无法创建画布')
+  if (!ctx) throw new Error('Canvas を作成できません')
   ctx.imageSmoothingQuality = 'high'
   if (type === 'image/jpeg') {
     ctx.fillStyle = '#fff'
@@ -45,7 +45,7 @@ export async function renderMerged(segments: Shot[], type: 'image/png' | 'image/
   }
 
   return new Promise((resolve, reject) => {
-    canvas.toBlob(b => (b ? resolve(b) : reject(new Error('导出失败，图片可能过大'))), type, quality)
+    canvas.toBlob(b => (b ? resolve(b) : reject(new Error('保存に失敗しました。画像が大きすぎる可能性があります'))), type, quality)
   })
 }
 

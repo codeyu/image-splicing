@@ -80,19 +80,19 @@ function Segment({ shot, next, index, total, showSeam, onMove, onRemove, onLocat
       </div>
       {showSeam && next && !isDragging && <SeamHandles upper={shot} lower={next} index={index} onAdjust={onAdjust} />}
       <div className="seg-ops">
-        <button className="icon-btn grip" aria-label="拖动排序" ref={setActivatorNodeRef} {...attributes} {...listeners}>
+        <button className="icon-btn grip" aria-label="ドラッグで並べ替え" ref={setActivatorNodeRef} {...attributes} {...listeners}>
           <GripVertical size={14} />
         </button>
-        <button className="icon-btn" aria-label="定位原图" onClick={() => onLocate(shot.id)}>
+        <button className="icon-btn" aria-label="元画像を表示" onClick={() => onLocate(shot.id)}>
           <Crosshair size={14} />
         </button>
-        <button className="icon-btn" aria-label="上移" disabled={index === 0} onClick={() => onMove(shot.id, -1)}>
+        <button className="icon-btn" aria-label="上へ移動" disabled={index === 0} onClick={() => onMove(shot.id, -1)}>
           <ArrowUp size={14} />
         </button>
-        <button className="icon-btn" aria-label="下移" disabled={index === total - 1} onClick={() => onMove(shot.id, 1)}>
+        <button className="icon-btn" aria-label="下へ移動" disabled={index === total - 1} onClick={() => onMove(shot.id, 1)}>
           <ArrowDown size={14} />
         </button>
-        <button className="icon-btn" aria-label="从预览移除" onClick={() => onRemove(shot.id)}>
+        <button className="icon-btn" aria-label="プレビューから外す" onClick={() => onRemove(shot.id)}>
           <X size={14} />
         </button>
       </div>
@@ -144,8 +144,8 @@ function SeamHandles({ upper, lower, index, onAdjust }: SeamHandlesProps) {
   const handle = (which: 'upper' | 'lower', side: 'left' | 'right') => (
     <button
       className={`seam-handle seam-handle-${which} seam-handle-${side}`}
-      aria-label={which === 'upper' ? `调整第 ${index + 1} 张的下边` : `调整第 ${index + 2} 张的上边`}
-      title={which === 'upper' ? `拖动调整第 ${index + 1} 张的下边` : `拖动移动第 ${index + 2} 张`}
+      aria-label={which === 'upper' ? `${index + 1} 枚目の下端を調整` : `${index + 2} 枚目の上端を調整`}
+      title={which === 'upper' ? `ドラッグで ${index + 1} 枚目の下端を調整` : `ドラッグで ${index + 2} 枚目を移動`}
       onPointerDown={onPointerDown(which)}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

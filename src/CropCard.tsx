@@ -91,7 +91,7 @@ export function CropCard({ shot, index, total, highlighted, viewHeight, onResize
     onPointerUp: onResizeUp,
     onPointerCancel: onResizeUp,
     onDoubleClick: () => onResize(shot.id, undefined),
-    title: '拖动调整大小，双击恢复默认',
+    title: 'ドラッグでサイズ変更、ダブルクリックで元に戻す',
   })
 
   const setTop = (v: number) => onCrop(shot.id, clamp(v, 0, bottom - MIN_CROP), bottom)
@@ -112,13 +112,13 @@ export function CropCard({ shot, index, total, highlighted, viewHeight, onResize
       <div className="card-head">
         <span className="card-index">{index + 1}</span>
         <span className="card-name" title={shot.name}>{shot.name}</span>
-        <button className="icon-btn" aria-label="左移" disabled={index === 0} onClick={() => onMove(shot.id, -1)}>
+        <button className="icon-btn" aria-label="左へ移動" disabled={index === 0} onClick={() => onMove(shot.id, -1)}>
           <ArrowLeft size={14} />
         </button>
-        <button className="icon-btn" aria-label="右移" disabled={index === total - 1} onClick={() => onMove(shot.id, 1)}>
+        <button className="icon-btn" aria-label="右へ移動" disabled={index === total - 1} onClick={() => onMove(shot.id, 1)}>
           <ArrowRight size={14} />
         </button>
-        <button className="icon-btn" aria-label="删除" onClick={() => onRemove(shot.id)}>
+        <button className="icon-btn" aria-label="削除" onClick={() => onRemove(shot.id)}>
           <X size={14} />
         </button>
       </div>
@@ -151,7 +151,7 @@ export function CropCard({ shot, index, total, highlighted, viewHeight, onResize
           下
           <input type="number" min={top + MIN_CROP} max={height} value={bottom} onChange={e => setBottom(+e.target.value)} />
         </label>
-        <button className="icon-btn" aria-label="重置裁剪" title="重置为整张" onClick={() => onCrop(shot.id, 0, height)}>
+        <button className="icon-btn" aria-label="トリミングをリセット" title="画像全体に戻す" onClick={() => onCrop(shot.id, 0, height)}>
           <RotateCcw size={14} />
         </button>
       </div>
@@ -165,18 +165,18 @@ export function CropCard({ shot, index, total, highlighted, viewHeight, onResize
       <div className="card-foot">
         <span className="muted">
           {width}×{bottom - top}
-          {committed && !dirty && ' · 已加入'}
-          {dirty && ' · 有修改'}
+          {committed && !dirty && ' · 追加済み'}
+          {dirty && ' · 変更あり'}
         </span>
         <span className="card-foot-actions">
           {index > 0 && (
-            <button className="btn btn-sm" title="自动拼接第 1 张到这张" onClick={() => onAutoTo(shot.id)}>
-              <Wand2 size={14} /> 拼接到此
+            <button className="btn btn-sm" title="1 枚目からこの画像までを自動結合" onClick={() => onAutoTo(shot.id)}>
+              <Wand2 size={14} /> ここまで結合
             </button>
           )}
           {committed === null && (
             <button className="btn btn-primary btn-sm" onClick={() => onCommit(shot.id)}>
-              <Check size={14} /> 确定
+              <Check size={14} /> 確定
             </button>
           )}
           {dirty && (
