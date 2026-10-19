@@ -55,14 +55,26 @@ export function defaultBaseName() {
   return `splice-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
 }
 
-// 用户自填的文件名：去掉系统不允许的字符和多余的扩展名，留空则用时间戳
-export function exportFileName(ext: string, baseName = '') {
-  const clean = baseName
+// 用户自填的文件名：去掉系统不允许的字符和多余的扩展名
+export function cleanBaseName(baseName: string) {
+  return baseName
     .replace(/[\\/:*?"<>|\x00-\x1f]/g, '')
     .replace(/\.(png|jpe?g)$/i, '')
     .trim()
     .replace(/^\.+|\.+$/g, '')
-  return `${clean || defaultBaseName()}.${ext}`
+}
+
+// 留空则用时间戳
+export function exportFileName(ext: string, baseName = '') {
+  return `${cleanBaseName(baseName) || defaultBaseName()}.${ext}`
+}
+
+// 下一次的默认文件名：最后一段数字加 1，保留补零位数（abc-1 → abc-2，009 → 010）；没有数字则补 -2
+export function nextBaseName(baseName: string) {
+  const m = baseName.match(/^(.*?)(\d+)(\D*)$/)
+  if (!m) return `${baseName}-2`
+  const [, head, num, tail] = m
+  return head + String(Number(num) + 1).padStart(num.length, '0') + tail
 }
 
 export function downloadBlob(blob: Blob, name: string) {

@@ -3,7 +3,7 @@ import { Download, ImagePlus, Layers, Share2, Trash2, Wand2, Loader2 } from 'luc
 import { CropCard } from './CropCard'
 import { Preview } from './Preview'
 import { detectOverlaps } from './detect'
-import { downloadBlob, exportFileName, planExport, renderMerged } from './exporter'
+import { cleanBaseName, downloadBlob, exportFileName, nextBaseName, planExport, renderMerged } from './exporter'
 import type { Shot } from './types'
 
 type Format = 'image/png' | 'image/jpeg'
@@ -16,7 +16,8 @@ export default function App() {
   const [previewWidth, setPreviewWidth] = useState(360)
   const [showSeams, setShowSeams] = useState(true)
   const [format, setFormat] = useState<Format>('image/png')
-  const [fileName, setFileName] = useState('')
+  // 默认 1，每次点下载后自动加 1；重新上传一批图片时回到 1
+  const [fileName, setFileName] = useState('1')
   const [busy, setBusy] = useState<string | null>(null)
   const [highlight, setHighlight] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -31,6 +32,7 @@ export default function App() {
       .filter(f => f.type.startsWith('image/'))
       .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
     if (list.length === 0) return
+    setFileName('1')
     const loaded = await Promise.all(list.map(loadShot))
     setShots(prev => [...prev, ...loaded.filter((s): s is Shot => s !== null)])
     if (loaded.some(s => s === null)) setError('有图片无法读取，已跳过')
@@ -164,7 +166,10 @@ export default function App() {
 
   const onExport = async () => {
     const blob = await makeBlob()
-    if (blob) downloadBlob(blob, exportFileName(ext, fileName))
+    if (!blob) return
+    downloadBlob(blob, exportFileName(ext, fileName))
+    const base = cleanBaseName(fileName)
+    if (base) setFileName(nextBaseName(base))
   }
 
   const canShare = typeof navigator.canShare === 'function'
